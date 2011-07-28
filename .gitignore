@@ -1,0 +1,4 @@
+env_flask
+*.swp
+*.pyc
+.ropeproject
