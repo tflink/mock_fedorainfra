@@ -1,0 +1,18 @@
+This is a partial implementation of the Fedora infrastructure to use for testing
+without needing to actually set up instances of all the services.
+
+The project was initially designed to assist in the testing of AutoQA.
+
+Dependencies:
+  Flask
+  Flask-XML-RPC
+
+To run the tests, run:
+  runtests.sh
+
+To start a local http server, run:
+  python mock_fedorainfra/boji.py
+
+Note that Flask and its dependencies are installed into a virtualenv if you run
+the runtests.sh script. After its creation, you can activate the env_flask
+virtualenv and run Flask without installing any new packages.
