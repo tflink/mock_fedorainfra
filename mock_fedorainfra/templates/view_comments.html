@@ -1,0 +1,49 @@
+<!doctype html>
+<title>Bodhi Comments</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+{% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+{% endfor %}
+<div class=page>
+    <h1>Bodhi Comments</h1>
+    <table>
+        <tr>
+            <td>
+                <form method="post" action="../../util/cleardb">
+                    <input type="submit" value="reset comment db">
+                </form>
+            </td>
+            <td>
+                <form method="post" action="../../util/cleardb">
+                    <input type="button" onClick="window.location.reload()" value="Refresh">
+                </form>
+            </td>
+        </tr>
+    </table>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Update</th>
+                <th>Comment</th>
+                <th>User</th>
+                <th>Karma</th>
+                <th>Send Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in bodhi_comments %}
+                <tr>
+                    <td>{{ comment['date'] }}</td>
+                    <td>{{ comment['update'] }}</td>
+                    <td>{{ comment['text'] }}</td>
+                    <td>{{ comment['user'] }}</td>
+                    <td>{{ comment['karma'] }}</td>
+                    <td>{{ comment['send_email'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
