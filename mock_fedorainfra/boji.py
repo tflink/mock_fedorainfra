@@ -26,9 +26,10 @@ from flaskext.xmlrpc import XMLRPCHandler, Fault
 import mock_fedorainfra.koji.mock_koji as mock_koji
 import json
 from contextlib import closing
-from sqlite3 import dbapi2 as sqlite3
 from datetime import datetime
 import fedora.client
+from mock_fedorainfra.database import db_session, init_db
+from mock_fedorainfra.models import BodhiComment
 
 # configuration
 DATABASE = '/tmp/boji.db'
@@ -42,25 +43,14 @@ koji_getbuild_resp = {'owner_name': 'cebbert', 'package_name': 'kernel', 'task_i
 app = Flask(__name__)
 #app.debug = True
 app.config.from_object(__name__)
-
-def connect_db():
-    """Returns a new connection to the database."""
-    #return sqlite3.connect(':memory:')
-    return sqlite3.connect(app.config['DATABASE'])
-
-def init_db():
-    with closing(connect_db()) as db:
-        with app.open_resource('schema.sql') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-
-@app.before_request
-def before_request():
-    g.db = connect_db()
+init_db()
 
 @app.teardown_request
-def teardown_request(exception):
-    g.db.close()
+def shutdown_session(exception=None):
+    db_session.remove()
+
+def get_bodhi_connection():
+    return fedora.client.bodhi.BodhiClient()
 
 handler = XMLRPCHandler('mockkoji')
 handler.connect(app, '/mockkoji')
@@ -109,26 +99,17 @@ def listBuilds(args):
 
 @app.route('/bodhi/comment', methods=['POST'])
 def bodhi_comment():
-    app.logger.debug('user is: %s' % str(request.form['user_name']))
-    app.logger.debug('password is: %s' % str(request.form['password']))
-    app.logger.debug('update is: %s' % str(request.form['title']))
-    app.logger.debug('comment is: %s' % str(request.form['text']))
-    app.logger.debug('karma is: %s' % str(request.form['karma']))
-    app.logger.debug('email is: %s' % str(request.form['email']))
-    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    try:
-        g.db.execute('insert into comments (date, update_name, text, user, karma, email) values (? ,? , ?, ?, ?, ?)',
-                [current_time, str(request.form['title']), str(request.form['text']), str(request.form['user_name']),
-                    str(request.form['karma']), str(request.form['email'])])
-        g.db.commit()
-    except sqlite3.Error, e:
-        app.logger.debug('An error occurred:', e.args[0])
+    current_time = str(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+    db_session.add(BodhiComment(current_time, str( request.form['title']),
+                str(request.form['text']), str(request.form['user_name']),
+                int(request.form['karma']), request.form['email'] in ['false', 'False']))
+    db_session.commit()
     return json.dumps(default_response)
 
 @app.route('/bodhi/list', methods=['POST','GET'])
 def bodhi_list():
     # we need username, release, package, request, status, type_, bugs, mine
-    user= release= package= bodhirequest= status= type= bugs= mine = ''
+    user= release= package= bodhirequest= status= update_type= bugs= mine = ''
     limit = 1
 
     if 'username' in request.form.keys():
@@ -142,7 +123,7 @@ def bodhi_list():
     if 'status' in request.form.keys():
         status = str(request.form['status'])
     if 'type_' in request.form.keys():
-        type = str(request.form['type_'])
+        update_type = str(request.form['type_'])
     if 'bugs' in request.form.keys():
         bugs = request.form['bugs']
     if 'mine' in request.form.keys():
@@ -150,26 +131,40 @@ def bodhi_list():
     if 'tg_paginate_limit' in request.form.keys():
         limit = int(request.form['tg_paginate_limit'])
 
-    bodhi = fedora.client.bodhi.BodhiClient()
+    bodhi = get_bodhi_connection()
     result = bodhi.query(package=package, limit=limit).toDict()
+    for update in result['updates']:
+        comments = search_comments(update['title'])
+        update['comments'] = comments
     return json.dumps(result)
+
+def search_comments(update):
+    print 'update to search for: %s' % update
+    print 'update type: %s' % str(type(update))
+    c = db_session.query(BodhiComment.title(update)).order_by(BodhiComment.id)
+#    c = g.db.execute('select * from comments where comments.update_name is (?) order by id desc', (update,))
+    comments = [dict(timestamp=c.date, update=c.title,text=c.text, author=c.username,
+                    karma=c.karma, anonymous=False, group=None) for row in c]
+    return comments
+
+def get_comments():
+    c = db_session.query(BodhiComment).order_by(BodhiComment.id)
+    comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
+                karma=row.karma, send_email=row.send_email) for row in c]
+    return comments
 
 @app.route('/view/bodhi_comments')
 def view_bodhi_comments():
-    c = g.db.execute('select * from comments order by id desc')
-    comments = [dict(date=row[1], update=row[2],text=row[3], user=row[4], karma=row[5], send_email=row[6]) for row in c]
-
+    comments = get_comments()
     return render_template('view_comments.html', bodhi_comments=comments)
 
 
 @app.route('/util/cleardb', methods=['POST'])
 def clear_db():
-    g.db.execute('delete from comments')
-    g.db.commit()
+    db_session.execute('delete from comments')
+    db_session.commit()
     flash('Database was cleared')
     return redirect(url_for('view_bodhi_comments'))
-
-
 
 def decode_args(*args):
     """Decodes optional arguments from a flat argument list
