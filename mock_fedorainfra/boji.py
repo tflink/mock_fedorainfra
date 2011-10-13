@@ -139,12 +139,9 @@ def bodhi_list():
     return json.dumps(result)
 
 def search_comments(update):
-    print 'update to search for: %s' % update
-    print 'update type: %s' % str(type(update))
-    c = db_session.query(BodhiComment.title(update)).order_by(BodhiComment.id)
-#    c = g.db.execute('select * from comments where comments.update_name is (?) order by id desc', (update,))
-    comments = [dict(timestamp=c.date, update=c.title,text=c.text, author=c.username,
-                    karma=c.karma, anonymous=False, group=None) for row in c]
+    c = db_session.query(BodhiComment).filter(BodhiComment.title == update).order_by(BodhiComment.id)
+    comments = [dict(timestamp=row.date, update=row.title,text=c.text, author=row.username,
+                    karma=row.karma, anonymous=False, group=None) for row in c]
     return comments
 
 def get_comments():
