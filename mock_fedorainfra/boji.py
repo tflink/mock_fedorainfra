@@ -30,13 +30,15 @@ from datetime import datetime
 import fedora.client
 from mock_fedorainfra.database import db_session, init_db
 from mock_fedorainfra.models import BodhiComment
+from mock_fedorainfra import util
 
 # configuration
 DATABASE = '/tmp/boji.db'
 DEBUG = True
 SECRET_KEY = 'test key'
+NUM_PAGE = 20
 
-default_response = {"num_items": 1, "title": "1 update found", "tg_flash": None, "updates": [{"status": "testing", "close_bugs": False, "request": None, "date_submitted": "2011-05-25 16:14:36", "unstable_karma": -3, "submitter": "cebbert", "critpath": True, "approved": None, "stable_karma": 3, "date_pushed": "2011-05-26 21:13:37", "builds": [{"nvr": "kernel-2.6.35.13-92.fc14", "package": {"suggest_reboot": True, "committers": ["kernel-maint", "nhorman", "cebbert", "glisse", "jwrdegoede", "davej", "linville", "steved", "airlied", "oliver", "chrisw", "myoung", "roland", "dwmw2", "jwilson", "mjg59", "eparis", "josef", "ajax", "bskeggs", "dcbw", "markmc", "quintela", "mchehab", "jforbes", "sandeen", "kyle", "katzj"], "name": "kernel"}}], "title": "kernel-2.6.35.13-92.fc14", "notes": "Some small but critical bug fixes and one security fix.", "date_modified": None, "nagged": None, "bugs": [{"bz_id": 703011, "security": True, "parent": True, "title": "CVE-2011-1770 kernel: dccp: handle invalid feature options length"}, {"bz_id": 704059, "security": False, "parent": False, "title": "Machine doesn\'t smoothly boot after installing 2.6.35.13-91.fc14.x86_64"}, {"bz_id": 704125, "security": False, "parent": False, "title": "kernel-2.6.35.13-91 breaks  mount.cifs"}], "comments": [{"group": None, "karma": 0, "anonymous": False, "author": "bodhi", "timestamp": "2011-05-25 16:15:20", "text": "This update has been submitted for testing by cebbert. "}, {"group": None, "karma": 0, "anonymous": False, "author": "autoqa", "timestamp": "2011-05-25 16:43:08", "text": "AutoQA: depcheck test PASSED on i386. Result log:\nhttp://autoqa.fedoraproject.org/results/101163-autotest/172.16.0.17/depcheck/results/output.log\n(results are informative only)"}, {"group": None, "karma": 0, "anonymous": False, "author": "autoqa", "timestamp": "2011-05-25 16:44:11", "text": "AutoQA: depcheck test PASSED on x86_64. Result log:\nhttp://autoqa.fedoraproject.org/results/101162-autotest/172.16.0.18/depcheck/results/output.log\n(results are informative only)"}, {"group": None, "karma": 0, "anonymous": False, "author": "bodhi", "timestamp": "2011-05-26 21:50:11", "text": "This update has been pushed to testing"}, {"group": None, "karma": 1, "anonymous": False, "author": "sanchan", "timestamp": "2011-05-27 06:56:43", "text": "704125 verified, works fine here."}, {"group": None, "karma": -1, "anonymous": True, "author": "Paran0rmaL1983@gmail.com", "timestamp": "2011-05-27 11:51:53", "text": "again does not work kmod-nvidia driver"}, {"group": "proventesters", "karma": 1, "anonymous": False, "author": "watzkej", "timestamp": "2011-05-31 01:17:49", "text": "kernel still boots and works fine"}, {"group": None, "karma": 0, "anonymous": False, "author": "bodhi", "timestamp": "2011-05-31 01:17:49", "text": "Critical path update approved"}, {"group": None, "karma": 1, "anonymous": False, "author": "sanchan", "timestamp": "2011-05-31 11:38:25", "text": "@Paran0rmaL1983: just use rpmfusion-nonfree-updates-testing, kmod-nvidia driver\nworks fine."}, {"group": None, "karma": 1, "anonymous": True, "author": "kks@iki.fi", "timestamp": "2011-06-01 06:11:01", "text": "704059 OK now"}], "critpath_approved": True, "updateid": "FEDORA-2011-7551", "karma": 2, "release": {"dist_tag": "dist-f14", "id_prefix": "FEDORA", "locked": False, "name": "F14", "long_name": "Fedora 14"}, "type": "security"}]}
+default_response = util.make_default_update()
 
 koji_getbuild_resp = {'owner_name': 'cebbert', 'package_name': 'kernel', 'task_id': 3085371, 'creation_event_id': 3729725, 'creation_time': '2011-05-21 17:16:58.584573', 'epoch': None, 'nvr': 'kernel-2.6.35.13-92.fc14', 'name': 'kernel', 'completion_time': '2011-05-21 18:37:45.561815', 'state': 1, 'version': '2.6.35.13', 'release': '92.fc14', 'creation_ts': 1305998218.58457, 'package_id': 8, 'id': 244715, 'completion_ts': 1306003065.56182, 'owner_id': 417}
 
@@ -45,15 +47,15 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 init_db()
 
+handler = XMLRPCHandler('mockkoji')
+handler.connect(app, '/mockkoji')
+
 @app.teardown_request
 def shutdown_session(exception=None):
     db_session.remove()
 
 def get_bodhi_connection():
     return fedora.client.bodhi.BodhiClient()
-
-handler = XMLRPCHandler('mockkoji')
-handler.connect(app, '/mockkoji')
 
 @handler.register
 def getBuild(nvr):
@@ -140,20 +142,31 @@ def bodhi_list():
 
 def search_comments(update):
     c = db_session.query(BodhiComment).filter(BodhiComment.title == update).order_by(BodhiComment.id)
-    comments = [dict(timestamp=row.date, update=row.title,text=c.text, author=row.username,
+    comments = [dict(timestamp=row.date, update=row.title,text=row.text, author=row.username,
                     karma=row.karma, anonymous=False, group=None) for row in c]
     return comments
 
-def get_comments():
-    c = db_session.query(BodhiComment).order_by(BodhiComment.id)
+def get_comments(start=0, num_comments=NUM_PAGE):
+    c = db_session.query(BodhiComment).order_by(BodhiComment.id).slice(start, start+num_comments)
     comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
-                karma=row.karma, send_email=row.send_email) for row in c]
+                karma=row.karma, send_email=row.send_email, id=row.id) for row in c]
     return comments
 
 @app.route('/view/bodhi_comments')
 def view_bodhi_comments():
     comments = get_comments()
     return render_template('view_comments.html', bodhi_comments=comments)
+
+@app.route('/boji/comments', methods=['GET'])
+def default_boji_comments():
+    return redirect('/boji/comments/0')
+
+@app.route('/boji/comments/<int:start_comment>', methods=['GET'])
+def boji_comments(start_comment):
+    comments = get_comments(start=start_comment)
+    next_start = (start_comment + NUM_PAGE)
+    prev_start = (start_comment - NUM_PAGE)
+    return render_template('view_comments.html', bodhi_comments=comments, next_start= next_start, prev_start= prev_start)
 
 
 @app.route('/util/cleardb', methods=['POST'])

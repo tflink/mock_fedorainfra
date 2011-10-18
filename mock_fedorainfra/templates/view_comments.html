@@ -9,13 +9,23 @@
     <table>
         <tr>
             <td>
-                <form method="post" action="../../util/cleardb">
-                    <input type="submit" value="reset comment db">
+                <form>
+                    <input type="button" onClick="window.location='{{next_start}}'" value="next">
+                </form>
+            </td>
+            <td>
+                <form>
+                    <input type="button" onClick="window.location='{{prev_start}}'" value="prev">
+                </form>
+            </td>
+            <td>
+                <form>
+                    <input type="button" onClick="window.location.reload()" value="Refresh">
                 </form>
             </td>
             <td>
                 <form method="post" action="../../util/cleardb">
-                    <input type="button" onClick="window.location.reload()" value="Refresh">
+                    <input type="submit" value="reset comment db">
                 </form>
             </td>
         </tr>
@@ -24,6 +34,7 @@
     <table border="1">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Date</th>
                 <th>Update</th>
                 <th>Comment</th>
@@ -35,6 +46,7 @@
         <tbody>
             {% for comment in bodhi_comments %}
                 <tr>
+                    <td>{{ comment['id'] }}</td>
                     <td>{{ comment['date'] }}</td>
                     <td>{{ comment['update'] }}</td>
                     <td>{{ comment['text'] }}</td>

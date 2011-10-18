@@ -23,8 +23,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+import ConfigParser
 
-engine = create_engine('sqlite:////tmp/boji.db', convert_unicode=True)
+def connect():
+    pass
+
+db_url = 'sqlite:////tmp/boji.db'
+
+engine = create_engine(db_url, convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,
                                          autoflush=False,
                                          bind=engine))
