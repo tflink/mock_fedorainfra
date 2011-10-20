@@ -38,21 +38,15 @@
                 <th>Date</th>
                 <th>Update</th>
                 <th>Comment</th>
-                <th>User</th>
-                <th>Karma</th>
-                <th>Send Email</th>
             </tr>
         </thead>
         <tbody>
             {% for comment in bodhi_comments %}
                 <tr>
-                    <td>{{ comment['id'] }}</td>
+                    <td> <a href="{{comment['url']}}">{{ comment['id'] }} </a></td>
                     <td>{{ comment['date'] }}</td>
                     <td>{{ comment['update'] }}</td>
                     <td>{{ comment['text'] }}</td>
-                    <td>{{ comment['user'] }}</td>
-                    <td>{{ comment['karma'] }}</td>
-                    <td>{{ comment['send_email'] }}</td>
                 </tr>
             {% endfor %}
         </tbody>

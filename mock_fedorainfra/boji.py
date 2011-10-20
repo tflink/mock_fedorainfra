@@ -151,7 +151,7 @@ def search_comments(update):
 def get_comments(start=0, num_comments=NUM_PAGE):
     c = db_session.query(BodhiComment).order_by(BodhiComment.id).slice(start, start+num_comments)
     comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
-                karma=row.karma, send_email=row.send_email, id=row.id) for row in c]
+                karma=row.karma, send_email=row.send_email, id=row.id ) for row in c]
     return comments
 
 @app.route('/boji/comments', methods=['GET'])
@@ -161,6 +161,8 @@ def default_boji_comments():
 @app.route('/boji/comments/<int:start_comment>', methods=['GET'])
 def boji_comments(start_comment):
     comments = get_comments(start=start_comment)
+    for c in comments:
+        c['url'] = url_for('get_boji_comment', comment_id=c['id'])
     next_start = (start_comment + NUM_PAGE)
     prev_start = (start_comment - NUM_PAGE)
     return render_template('view_comments.html', bodhi_comments=comments, next_start= next_start, prev_start= prev_start)
@@ -174,6 +176,25 @@ def boji_search_comments():
             comments = search_comments(request.form['title'])
         return render_template('view_comments.html', bodhi_comments=comments, next_start= 0, prev_start=0)
 
+@app.route('/boji/comment/<int:comment_id>', methods = ['GET', 'POST', 'DELETE'])
+def get_boji_comment(comment_id):
+    c = db_session.query(BodhiComment).filter(BodhiComment.id == comment_id).first()
+
+    if request.method == 'GET':
+        comment = dict(date=str(c.date), update=c.title, text=c.text, user=c.username, karma=c.karma, send_email=c.send_email, id=c.id)
+        return render_template('comment_detail.html', comment = comment)
+
+    # stupid browsers not supporting HTTP delete calls ...
+    elif request.method == 'POST':
+        if request.form['request'] == 'DELETE':
+            db_session.delete(c)
+            db_session.commit()
+            return redirect(url_for('default_boji_comments'))
+
+    elif request.method == 'DELETE':
+        db_session.delete(c)
+        db_session.commit()
+        return (url_for('default_boji_comments'))
 
 @app.route('/util/cleardb', methods=['POST'])
 def clear_db():

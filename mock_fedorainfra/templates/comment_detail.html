@@ -1,0 +1,66 @@
+<!doctype html>
+<title>Bodhi Comments</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+{% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+{% endfor %}
+
+<div class=page>
+    <h1>Bodhi Comment Detail</h1>
+    <table>
+        <tr>
+            <td>
+                <form>
+                    <input type="button" onClick="window.location.reload()" value="Refresh">
+                </form>
+            </td>
+            <td>
+                <form method="post" action='/boji/comment/{{ comment['id'] }}'>
+                    <input type="hidden" name="request" value="DELETE"/>
+                    <input type="submit" value="Delete Comment"/>
+                </form>
+            </td>
+        </tr>
+    </table>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>key</th>
+                <th>value</th>
+            </tr>
+        </thead>
+        <tbody>
+                <tr>
+                    <td>ID</td>
+                    <td>{{ comment['id'] }}</td>
+                </tr>
+
+                <tr>
+                    <td>Date</td>
+                    <td>{{ comment['date'] }}</td>
+                </tr>
+                <tr>
+                    <td>Title</td>
+                    <td>{{ comment['update'] }}</td>
+                </tr>
+                <tr>
+                    <td>Comment</td>
+                    <td>{{ comment['text'] }}</td>
+                </tr>
+                <tr>
+                    <td>User</td>
+                    <td>{{ comment['user'] }}</td>
+                </tr>
+                <tr>
+                    <td>Karma</td>
+                    <td>{{ comment['karma'] }}</td>
+                </tr>
+                <tr>
+                    <td>send email</td>
+                    <td>{{ comment['send_email'] }}</td>
+                </tr>
+        </tbody>
+    </table>
+</div>
+
