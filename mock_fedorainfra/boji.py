@@ -136,14 +136,16 @@ def bodhi_list():
     bodhi = get_bodhi_connection()
     result = bodhi.query(package=package, limit=limit).toDict()
     for update in result['updates']:
-        comments = search_comments(update['title'])
+        raw_comments = search_comments(update['title'])
+        comments = [dict(timestamp=row.date, update=row.update ,text=row.text, author=row.user,
+                    karma=row.karma, anonymous=False, group=None) for row in raw_comments]
         update['comments'] = comments
     return json.dumps(result)
 
 def search_comments(update):
-    c = db_session.query(BodhiComment).filter(BodhiComment.title == update).order_by(BodhiComment.id)
-    comments = [dict(timestamp=row.date, update=row.title,text=row.text, author=row.username,
-                    karma=row.karma, anonymous=False, group=None) for row in c]
+    c = db_session.query(BodhiComment).filter(BodhiComment.title.like('%%%s%%' % update)).order_by(BodhiComment.id)
+    comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
+                karma=row.karma, send_email=row.send_email, id=row.id) for row in c]
     return comments
 
 def get_comments(start=0, num_comments=NUM_PAGE):
@@ -151,11 +153,6 @@ def get_comments(start=0, num_comments=NUM_PAGE):
     comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
                 karma=row.karma, send_email=row.send_email, id=row.id) for row in c]
     return comments
-
-@app.route('/view/bodhi_comments')
-def view_bodhi_comments():
-    comments = get_comments()
-    return render_template('view_comments.html', bodhi_comments=comments)
 
 @app.route('/boji/comments', methods=['GET'])
 def default_boji_comments():
@@ -167,6 +164,15 @@ def boji_comments(start_comment):
     next_start = (start_comment + NUM_PAGE)
     prev_start = (start_comment - NUM_PAGE)
     return render_template('view_comments.html', bodhi_comments=comments, next_start= next_start, prev_start= prev_start)
+
+@app.route('/boji/comments/search', methods=['GET', 'POST'])
+def boji_search_comments():
+    if request.method == 'GET':
+        return render_template('search_comments.html')
+    elif request.method == 'POST':
+        if 'title' in request.form.keys():
+            comments = search_comments(request.form['title'])
+        return render_template('view_comments.html', bodhi_comments=comments, next_start= 0, prev_start=0)
 
 
 @app.route('/util/cleardb', methods=['POST'])
