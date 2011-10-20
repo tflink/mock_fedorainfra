@@ -196,6 +196,10 @@ def get_boji_comment(comment_id):
         db_session.commit()
         return (url_for('default_boji_comments'))
 
+@app.route('/boji/', methods = ['GET'])
+def boji_main():
+    return render_template('boji_main.html')
+
 @app.route('/util/cleardb', methods=['POST'])
 def clear_db():
     db_session.execute('delete from comments')

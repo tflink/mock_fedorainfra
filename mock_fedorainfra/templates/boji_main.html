@@ -1,0 +1,43 @@
+<!doctype html>
+<title>Welcome to Boji!</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+{% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+{% endfor %}
+<div class=page>
+    <h1>Welcome to Boji!</h1>
+    <p>
+        The idea here is to provide an interface to the mock bodhi and mock koji
+        (not implemented yet) interfaces used to test AutoQA.
+    </p>
+    <h3>Functions</h3>
+     <table>
+        <tr>
+            <td>
+                <form method="get" action="comments">
+                    <input type="submit" value="view comments">
+                </form>
+            </td>
+            <td>
+                <form method="get" action="comments/search">
+                    <input type="submit" value="search comments">
+                </form>
+            </td>
+        </tr>
+    </table>
+
+    <h3> Maintenance Functions </h3>
+    <p>
+        Beware that this comment is destructive and immediate, use at your own
+        risk!
+    </p>
+    <table>
+        <tr>
+            <td>
+                <form method="post" action="../../util/cleardb">
+                    <input type="submit" value="reset comment db">
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
