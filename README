@@ -13,24 +13,27 @@ Capabilities:
     - Providing fake data for koji queries
 
 Dependencies:
-  Flask
+  Flask >= .8
   Flask-XML-RPC
+  SQLAlchemy
+  py.test >= 2.0.0
 
 To run the tests, run:
   runtests.sh
 
+When the tests are run, a virtualenv will be created that contains all of the
+dependencies is created.
+
 To start a local http server, run:
+  source env_flask/bin/activate
   python mock_fedorainfra/boji.py
 
 If you want the http server to be accessible from other machines, add the
 public host name to the end of boji.py
  -> app.run(host='your-hostname-here')
 
-To initialize the sqlite database (used to store comments), Start a python
-interpreter and type the following
- > import mock_fedorainfra.boji
- > mock_fedorainfra.boji.init_db()
-
+Right now, everything is stored in a sqlite3 database at /tmp/boji.db. The
+database will be initialized automatically when the application starts.
 
 Note that Flask and its dependencies are installed into a virtualenv if you
 run the runtests.sh script. After its creation, you can activate the
