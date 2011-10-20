@@ -28,6 +28,9 @@ To start a local http server, run:
   source env_flask/bin/activate
   python mock_fedorainfra/boji.py
 
+To use the HTML viewer, navigate to:
+  http://your-host-name-here:5000/boji/
+
 If you want the http server to be accessible from other machines, add the
 public host name to the end of boji.py
  -> app.run(host='your-hostname-here')
