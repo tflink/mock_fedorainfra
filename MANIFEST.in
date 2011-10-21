@@ -1,0 +1,2 @@
+recursive-include mock_fedorainfra/templates *
+recursive-include mock_fedorainfra/static *
