@@ -137,9 +137,10 @@ def bodhi_list():
     result = bodhi.query(package=package, limit=limit).toDict()
     for update in result['updates']:
         raw_comments = search_comments(update['title'])
-        comments = [dict(timestamp=row.date, update=row.update ,text=row.text, author=row.user,
-                    karma=row.karma, anonymous=False, group=None) for row in raw_comments]
-        update['comments'] = comments
+        if len(raw_comments) > 0:
+            comments = [dict(timestamp=row.date, update=row.update ,text=row.text, author=row.user,
+                        karma=row.karma, anonymous=False, group=None) for row in raw_comments]
+            update['comments'] = comments
     return json.dumps(result)
 
 def search_comments(update):
@@ -165,6 +166,8 @@ def boji_comments(start_comment):
         c['url'] = url_for('get_boji_comment', comment_id=c['id'])
     next_start = (start_comment + NUM_PAGE)
     prev_start = (start_comment - NUM_PAGE)
+    if prev_start < 0:
+        prev_start = 0
     return render_template('view_comments.html', bodhi_comments=comments, next_start= next_start, prev_start= prev_start)
 
 @app.route('/boji/comments/search', methods=['GET', 'POST'])
