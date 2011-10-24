@@ -137,10 +137,9 @@ def bodhi_list():
     result = bodhi.query(package=package, limit=limit).toDict()
     for update in result['updates']:
         raw_comments = search_comments(update['title'])
-        if len(raw_comments) > 0:
-            comments = [dict(timestamp=row.date, update=row.update ,text=row.text, author=row.user,
-                        karma=row.karma, anonymous=False, group=None) for row in raw_comments]
-            update['comments'] = comments
+        comments = [dict(timestamp=row['date'], update=row['update'] ,text=row['text'], author=row['user'],
+                    karma=row['karma'], anonymous=False, group=None) for row in raw_comments]
+        update['comments'] = comments
     return json.dumps(result)
 
 def search_comments(update):
