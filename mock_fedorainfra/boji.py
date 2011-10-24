@@ -208,7 +208,7 @@ def clear_db():
     db_session.execute('delete from comments')
     db_session.commit()
     flash('Database was cleared')
-    return redirect(url_for('view_bodhi_comments'))
+    return redirect(url_for('default_boji_comments'))
 
 def decode_args(*args):
     """Decodes optional arguments from a flat argument list
