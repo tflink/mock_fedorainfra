@@ -191,6 +191,7 @@ def get_boji_comment(comment_id):
         if request.form['request'] == 'DELETE':
             db_session.delete(c)
             db_session.commit()
+            flash('Comment %d was deleted' % comment_id)
             return redirect(url_for('default_boji_comments'))
 
     elif request.method == 'DELETE':
