@@ -46,7 +46,7 @@
                 </tr>
                 <tr>
                     <td>Comment</td>
-                    <td>{{ comment['text'] }}</td>
+                    <td>{{ comment['text'] | urlize(120, true)}}</td>
                 </tr>
                 <tr>
                     <td>User</td>

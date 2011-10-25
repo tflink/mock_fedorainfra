@@ -46,7 +46,7 @@
                     <td> <a href="{{comment['url']}}">{{ comment['id'] }} </a></td>
                     <td>{{ comment['date'] }}</td>
                     <td>{{ comment['update'] }}</td>
-                    <td>{{ comment['text'] }}</td>
+                    <td>{{ comment['text'] | urlize(120, true)}}</td>
                 </tr>
             {% endfor %}
         </tbody>
