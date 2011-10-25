@@ -1,0 +1,246 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing Boji as a WSGI Application &mdash; Boji v0.1.3 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Boji v0.1.3 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">Boji v0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installing-boji-as-a-wsgi-application">
+<span id="installation-wsgi-app"></span><h1>Installing Boji as a WSGI Application<a class="headerlink" href="#installing-boji-as-a-wsgi-application" title="Permalink to this headline">¶</a></h1>
+<p>Since it is unlikely that this would ever be installed outside a Fedora
+environment, these installation instructions are for Fedora.</p>
+<div class="section" id="local-preparation">
+<h2>Local Preparation<a class="headerlink" href="#local-preparation" title="Permalink to this headline">¶</a></h2>
+<p>Boji uses fabric to do the remote deployments, so you&#8217;ll need that locally
+if you want to deploy to a remote server (not needed for a local install).</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">yum</span> <span class="pre">install</span> <span class="pre">fabric</span></tt></div></blockquote>
+<dl class="docutils">
+<dt>Grab the code from github:</dt>
+<dd><tt class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">git://github.com/tflink/mock_fedorainfra.git</span></tt></dd>
+</dl>
+</div>
+<div class="section" id="remote-host-preparation">
+<h2>Remote Host Preparation<a class="headerlink" href="#remote-host-preparation" title="Permalink to this headline">¶</a></h2>
+<p>Distribute takes care of most of the python dependencies on the remote host
+and boji will be installed into a virtualenv, so you don&#8217;t have to worry about
+messing up your default python installation.</p>
+<dl class="docutils">
+<dt>Remote Python dependencies:</dt>
+<dd><ul class="first last simple">
+<li>Flask &gt;= .8</li>
+<li>Flask-XML-RPC</li>
+<li>SQLAlchemy &gt;= 0.7</li>
+<li>py.test &gt;= 2.0.0</li>
+</ul>
+</dd>
+</dl>
+<p>However, there are some dependencies that need to be installed with yum.</p>
+<dl class="docutils">
+<dt>On the target host, run:</dt>
+<dd><tt class="docutils literal"><span class="pre">yum</span> <span class="pre">install</span> <span class="pre">httpd</span> <span class="pre">mod_wsgi</span> <span class="pre">python-virtualenv</span> <span class="pre">python-fedora</span></tt></dd>
+</dl>
+<p>On some hosts (specifically, Fedora 16) you need to append the following line
+to /etc/httpd/conf.d/wsgi.conf</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">WSGISocketPrefix</span> <span class="pre">/var/run/wsgi</span></tt></div></blockquote>
+</div>
+<div class="section" id="initial-environment-setup">
+<h2>Initial Environment Setup<a class="headerlink" href="#initial-environment-setup" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Setup the virtualenv used for boji</dt>
+<dd><tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">/var/www/boji</span></tt>
+<tt class="docutils literal"><span class="pre">cd</span> <span class="pre">/var/www/boji</span></tt>
+<tt class="docutils literal"><span class="pre">virtualenv</span> <span class="pre">--distribute</span> <span class="pre">env</span></tt></dd>
+<dt>Copy these files to the target host:</dt>
+<dd><ul class="first last simple">
+<li>conf/boji.conf to /etc/httpd/conf.d</li>
+<li>conf/boji.wsgi to /var/www/boji/.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="installing-boji">
+<h2>Installing boji<a class="headerlink" href="#installing-boji" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways to install boji depending on whether you want to use fabric
+or do it manually (in case you don&#8217;t want to use fabric or can&#8217;t use it).</p>
+<div class="section" id="remote-installation-with-fabric">
+<h3>Remote Installation With Fabric<a class="headerlink" href="#remote-installation-with-fabric" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>From a local host, run</dt>
+<dd><tt class="docutils literal"><span class="pre">fab</span> <span class="pre">-u</span> <span class="pre">&lt;remote_user&gt;</span> <span class="pre">-H</span> <span class="pre">&lt;remote_host&gt;</span> <span class="pre">pack</span> <span class="pre">deploy</span></tt></dd>
+</dl>
+<p>Fabric will prompt you for the remote password once while installing.</p>
+</div>
+<div class="section" id="manual-installation">
+<h3>Manual Installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h3>
+<p>If you are deploying to a local machine or something that fabric can&#8217;t work with
+(ie needing to forward ssh keys etc.) you can install directly.</p>
+<p>From the directory containing a boji checkout, run:
+<tt class="docutils literal"><span class="pre">/var/www/boji/env/bin/python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt></p>
+<p>To make sure that the wsgi app is reloaded, run:
+<tt class="docutils literal"><span class="pre">touch</span> <span class="pre">/var/www/boji/boji.wsgi</span></tt></p>
+</div>
+</div>
+<div class="section" id="start-the-server">
+<h2>Start The Server<a class="headerlink" href="#start-the-server" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>On the remote host, run:</dt>
+<dd><tt class="docutils literal"><span class="pre">systemctl</span> <span class="pre">start</span> <span class="pre">httpd.service</span></tt></dd>
+</dl>
+<p>Everything should be set and boji will now be running at <tt class="docutils literal"><span class="pre">http://hostname.domain/boji</span></tt>
+and everlasting happiness shall ensue ...</p>
+</div>
+<div class="section" id="updating-boji">
+<h2>Updating boji<a class="headerlink" href="#updating-boji" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>From the local machine, update the git checkout:</dt>
+<dd><tt class="docutils literal"><span class="pre">git</span> <span class="pre">pull</span></tt></dd>
+<dt>Run fabric to update the remote install:</dt>
+<dd><tt class="docutils literal"><span class="pre">fab</span> <span class="pre">-u</span> <span class="pre">&lt;remote_user&gt;</span> <span class="pre">-H</span> <span class="pre">&lt;remote_host&gt;</span> <span class="pre">pack</span> <span class="pre">deploy</span></tt></dd>
+</dl>
+<p>The wsgi app is configured to reload on file changes, so httpd won&#8217;t need to be restarted.</p>
+</div>
+</div>
+<div class="section" id="using-the-development-server">
+<span id="installation-devel-server"></span><h1>Using the Development Server<a class="headerlink" href="#using-the-development-server" title="Permalink to this headline">¶</a></h1>
+<p>Boji can also be run with a development server. The easiest way to do this is to
+set up a virtualenv containing all of the dependencies.</p>
+<p><tt class="docutils literal"><span class="pre">yum</span> <span class="pre">install</span> <span class="pre">python-virtualenv</span></tt>
+<tt class="docutils literal"><span class="pre">sh</span> <span class="pre">runtests.sh</span></tt></p>
+<p>Running the tests this way will set up a virtualenv for you and install all of the required
+dependencies.</p>
+<div class="section" id="development-server-configuration">
+<h2>Development Server Configuration<a class="headerlink" href="#development-server-configuration" title="Permalink to this headline">¶</a></h2>
+<p>By default, the development server will run on localhost. This means that nothing outside the
+local machine will be able to access the application. To change this, edit the main method of
+boji.py.</p>
+<div class="line-block">
+<div class="line">if __name__ == &#8216;__main__&#8217;:</div>
+<div class="line-block">
+<div class="line">app.run(host=&#8217;localhost&#8217;)</div>
+</div>
+</div>
+<p>Changing the <tt class="docutils literal"><span class="pre">host='localhost'</span></tt> to be <tt class="docutils literal"><span class="pre">host=&lt;my_ipaddr&gt;</span></tt> where &lt;my_ipaddr&gt; is the external
+ip or hostname of your machine will allow the application to be accessed from other machines.</p>
+</div>
+<div class="section" id="starting-the-development-server">
+<h2>Starting the Development Server<a class="headerlink" href="#starting-the-development-server" title="Permalink to this headline">¶</a></h2>
+<p>Before starting the development server, activate the virtualenv:</p>
+<p><tt class="docutils literal"><span class="pre">source</span> <span class="pre">env_flask/bin/activate</span></tt></p>
+<p>To start the development server:</p>
+<p><tt class="docutils literal"><span class="pre">python</span> <span class="pre">mock_fedorainfra/boji.py</span></tt></p>
+<p>By default, the development server will run on port 5000 and reloads the application
+whenever you change any files associated with the application.</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing Boji as a WSGI Application</a><ul>
+<li><a class="reference internal" href="#local-preparation">Local Preparation</a></li>
+<li><a class="reference internal" href="#remote-host-preparation">Remote Host Preparation</a></li>
+<li><a class="reference internal" href="#initial-environment-setup">Initial Environment Setup</a></li>
+<li><a class="reference internal" href="#installing-boji">Installing boji</a><ul>
+<li><a class="reference internal" href="#remote-installation-with-fabric">Remote Installation With Fabric</a></li>
+<li><a class="reference internal" href="#manual-installation">Manual Installation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#start-the-server">Start The Server</a></li>
+<li><a class="reference internal" href="#updating-boji">Updating boji</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-development-server">Using the Development Server</a><ul>
+<li><a class="reference internal" href="#development-server-configuration">Development Server Configuration</a></li>
+<li><a class="reference internal" href="#starting-the-development-server">Starting the Development Server</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">Boji v0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Tim Flink.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
