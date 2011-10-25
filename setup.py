@@ -12,7 +12,7 @@ class PyTest(Command):
         raise SystemExit(errno)
 
 setup(name='mock_fedorainfra',
-      version='0.1.2',
+      version='0.1.3',
       description='Mock Fedora infrastructure designed to test AutoQA',
       author='Tim Flink',
       author_email='tflink@fedoraproject.org',
