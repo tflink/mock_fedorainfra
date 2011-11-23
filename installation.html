@@ -83,13 +83,16 @@ to /etc/httpd/conf.d/wsgi.conf</p>
 <h2>Initial Environment Setup<a class="headerlink" href="#initial-environment-setup" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
 <dt>Setup the virtualenv used for boji</dt>
-<dd><tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">/var/www/boji</span></tt>
-<tt class="docutils literal"><span class="pre">cd</span> <span class="pre">/var/www/boji</span></tt>
-<tt class="docutils literal"><span class="pre">virtualenv</span> <span class="pre">--distribute</span> <span class="pre">env</span></tt></dd>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">/var/www/boji</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">cd</span> <span class="pre">/var/www/boji</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">virtualenv</span> <span class="pre">--distribute</span> <span class="pre">env</span></tt></li>
+</ul>
+</dd>
 <dt>Copy these files to the target host:</dt>
 <dd><ul class="first last simple">
-<li>conf/boji.conf to /etc/httpd/conf.d</li>
-<li>conf/boji.wsgi to /var/www/boji/.</li>
+<li><tt class="docutils literal"><span class="pre">conf/boji.conf</span></tt> to <tt class="docutils literal"><span class="pre">/etc/httpd/conf.d/</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">conf/boji.wsgi</span></tt> to <tt class="docutils literal"><span class="pre">/var/www/boji/</span></tt>.</li>
 </ul>
 </dd>
 </dl>
@@ -110,10 +113,12 @@ or do it manually (in case you don&#8217;t want to use fabric or can&#8217;t use
 <h3>Manual Installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h3>
 <p>If you are deploying to a local machine or something that fabric can&#8217;t work with
 (ie needing to forward ssh keys etc.) you can install directly.</p>
-<p>From the directory containing a boji checkout, run:
-<tt class="docutils literal"><span class="pre">/var/www/boji/env/bin/python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt></p>
-<p>To make sure that the wsgi app is reloaded, run:
-<tt class="docutils literal"><span class="pre">touch</span> <span class="pre">/var/www/boji/boji.wsgi</span></tt></p>
+<dl class="docutils">
+<dt>From the directory containing a boji checkout, run:</dt>
+<dd><tt class="docutils literal"><span class="pre">/var/www/boji/env/bin/python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt></dd>
+<dt>To make sure that the wsgi app is reloaded, run:</dt>
+<dd><tt class="docutils literal"><span class="pre">touch</span> <span class="pre">/var/www/boji/boji.wsgi</span></tt></dd>
+</dl>
 </div>
 </div>
 <div class="section" id="start-the-server">
@@ -127,13 +132,32 @@ and everlasting happiness shall ensue ...</p>
 </div>
 <div class="section" id="updating-boji">
 <h2>Updating boji<a class="headerlink" href="#updating-boji" title="Permalink to this headline">¶</a></h2>
+<p>With either method of updating, you need to get the latest code from git.
+From the local machine, update the git checkout:</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">git</span> <span class="pre">pull</span></tt></div></blockquote>
+<div class="section" id="updating-boji-with-fabric">
+<h3>Updating boji with fabric<a class="headerlink" href="#updating-boji-with-fabric" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
-<dt>From the local machine, update the git checkout:</dt>
-<dd><tt class="docutils literal"><span class="pre">git</span> <span class="pre">pull</span></tt></dd>
 <dt>Run fabric to update the remote install:</dt>
 <dd><tt class="docutils literal"><span class="pre">fab</span> <span class="pre">-u</span> <span class="pre">&lt;remote_user&gt;</span> <span class="pre">-H</span> <span class="pre">&lt;remote_host&gt;</span> <span class="pre">pack</span> <span class="pre">deploy</span></tt></dd>
 </dl>
-<p>The wsgi app is configured to reload on file changes, so httpd won&#8217;t need to be restarted.</p>
+</div>
+<div class="section" id="updating-boji-without-fabric">
+<h3>Updating boji without fabric<a class="headerlink" href="#updating-boji-without-fabric" title="Permalink to this headline">¶</a></h3>
+<p>Assuming that your virtualenv is installed at <tt class="docutils literal"><span class="pre">/var/www/boji/env</span></tt>, cd into the
+directory containing the updated boji code and run</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">/var/www/boji/env/bin/python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt></div></blockquote>
+</div>
+<div class="section" id="making-sure-that-the-changes-are-detected">
+<h3>Making sure that the changes are detected<a class="headerlink" href="#making-sure-that-the-changes-are-detected" title="Permalink to this headline">¶</a></h3>
+<p>The wsgi app is configured to reload on file changes, so httpd shouldn&#8217;t need
+to be restarted after updating boji. If the changes don&#8217;t show up, touch the
+wsgi file</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">touch</span> <span class="pre">/var/www/boji/boji.wsgi</span></tt></div></blockquote>
+</div>
 </div>
 </div>
 <div class="section" id="using-the-development-server">
@@ -199,7 +223,12 @@ whenever you change any files associated with the application.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#start-the-server">Start The Server</a></li>
-<li><a class="reference internal" href="#updating-boji">Updating boji</a></li>
+<li><a class="reference internal" href="#updating-boji">Updating boji</a><ul>
+<li><a class="reference internal" href="#updating-boji-with-fabric">Updating boji with fabric</a></li>
+<li><a class="reference internal" href="#updating-boji-without-fabric">Updating boji without fabric</a></li>
+<li><a class="reference internal" href="#making-sure-that-the-changes-are-detected">Making sure that the changes are detected</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#using-the-development-server">Using the Development Server</a><ul>
