@@ -21,13 +21,14 @@
 
 
 from __future__ import with_statement
-from flask import Flask, request, g, url_for, render_template, flash, redirect
+from flask import Flask, request, url_for, render_template, flash, redirect
 from flaskext.xmlrpc import XMLRPCHandler, Fault
-import mock_fedorainfra.koji.mock_koji as mock_koji
 import json
-from contextlib import closing
 from datetime import datetime
 import fedora.client
+
+import mock_fedorainfra.koji.mock_koji as mock_koji
+from sqlalchemy import desc
 from mock_fedorainfra.database import db_session, init_db
 from mock_fedorainfra.models import BodhiComment
 from mock_fedorainfra import util
@@ -149,7 +150,7 @@ def search_comments(update):
     return comments
 
 def get_comments(start=0, num_comments=NUM_PAGE):
-    c = db_session.query(BodhiComment).order_by(BodhiComment.id).slice(start, start+num_comments)
+    c = db_session.query(BodhiComment).order_by(desc(BodhiComment.id)).slice(start, start+num_comments)
     comments = [dict(date=str(row.date), update=row.title, text=row.text, user=row.username,
                 karma=row.karma, send_email=row.send_email, id=row.id ) for row in c]
     return comments
