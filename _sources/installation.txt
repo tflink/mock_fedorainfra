@@ -116,8 +116,8 @@ Using the Development Server
 Boji can also be run with a development server. The easiest way to do this is to
 set up a virtualenv containing all of the dependencies.
 
-``yum install python-virtualenv``
-``sh runtests.sh``
+ - ``yum install python-virtualenv``
+ - ``sh runtests.sh``
 
 Running the tests this way will set up a virtualenv for you and install all of the required
 dependencies.
