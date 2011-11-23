@@ -40,13 +40,13 @@ Initial Environment Setup
 --------------------------
 
 Setup the virtualenv used for boji
- ``mkdir /var/www/boji``
- ``cd /var/www/boji``
- ``virtualenv --distribute env``
+ - ``mkdir /var/www/boji``
+ - ``cd /var/www/boji``
+ - ``virtualenv --distribute env``
 
 Copy these files to the target host:
- * conf/boji.conf to /etc/httpd/conf.d
- * conf/boji.wsgi to /var/www/boji/.
+ * ``conf/boji.conf`` to ``/etc/httpd/conf.d/``
+ * ``conf/boji.wsgi`` to ``/var/www/boji/``.
 
 Installing boji
 ---------------
@@ -69,10 +69,10 @@ If you are deploying to a local machine or something that fabric can't work with
 (ie needing to forward ssh keys etc.) you can install directly.
 
 From the directory containing a boji checkout, run:
-``/var/www/boji/env/bin/python setup.py install``
+ ``/var/www/boji/env/bin/python setup.py install``
 
 To make sure that the wsgi app is reloaded, run:
-``touch /var/www/boji/boji.wsgi``
+ ``touch /var/www/boji/boji.wsgi``
 
 Start The Server
 ----------------
@@ -86,15 +86,27 @@ and everlasting happiness shall ensue ...
 Updating boji
 -------------
 
+With either method of updating, you need to get the latest code from git. 
 From the local machine, update the git checkout:
  ``git pull``
 
+Updating boji with fabric
+^^^^^^^^^^^^^^^^^^^^^^^^^
 Run fabric to update the remote install:
  ``fab -u <remote_user> -H <remote_host> pack deploy``
 
-The wsgi app is configured to reload on file changes, so httpd won't need to be restarted.
+Updating boji without fabric
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assuming that your virtualenv is installed at ``/var/www/boji/env``, cd into the
+directory containing the updated boji code and run
+ ``/var/www/boji/env/bin/python setup.py install``
 
-
+Making sure that the changes are detected
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The wsgi app is configured to reload on file changes, so httpd shouldn't need
+to be restarted after updating boji. If the changes don't show up, touch the
+wsgi file
+ ``touch /var/www/boji/boji.wsgi``
 
 .. _installation-devel-server:
 
