@@ -112,8 +112,8 @@ def bodhi_comment():
 @app.route('/bodhi/list', methods=['POST','GET'])
 def bodhi_list():
     # we need username, release, package, request, status, type_, bugs, mine
-    user= release= package= bodhirequest= status= update_type= bugs= mine = ''
-    limit = 1
+    user= release= package= bodhirequest= status= update_type= bugs= mine = None
+    limit = 10
 
     if 'username' in request.form.keys():
         user = str(request.form['username'])
@@ -135,7 +135,9 @@ def bodhi_list():
         limit = int(request.form['tg_paginate_limit'])
 
     bodhi = get_bodhi_connection()
-    result = bodhi.query(package=package, limit=limit).toDict()
+    result = bodhi.query(package=package, limit=limit, username=user,
+                            release=release, request=bodhirequest, status=status,
+                            type_=update_type, bugs=bugs, mine=mine).toDict()
     for update in result['updates']:
         raw_comments = search_comments(update['title'])
         comments = [dict(timestamp=row['date'], update=row['update'] ,text=row['text'], author=row['user'],
